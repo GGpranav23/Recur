@@ -19,7 +19,7 @@
     <Description>A simple habit tracker for Windows.</Description>
     <Company>Pranav Shinde</Company>
     <Copyright>Copyright © 2026 Pranav Shinde</Copyright>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <!-- Settings used by "dotnet publish" for the release build:
