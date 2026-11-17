@@ -1,0 +1,319 @@
+﻿<Window x:Class="HabitApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Recur" Height="680" Width="1040" MinWidth="820" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackground}" FontFamily="Segoe UI" FontSize="14"
+        SizeChanged="Window_SizeChanged">
+    <Window.Resources>
+        <Style x:Key="DayCellStyle" TargetType="Button">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Empty" Width="26" Height="26" CornerRadius="8"
+                                    Background="{DynamicResource CellEmpty}"/>
+                            <Border x:Name="Filled" Width="26" Height="26" CornerRadius="8"
+                                    Background="{Binding Color}" Visibility="Collapsed"/>
+                            <Path x:Name="Tick" Width="26" Height="26"
+                                  Data="M 7,13.5 L 11.5,18 L 19,9"
+                                  Stroke="White" StrokeThickness="2.4"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round" Visibility="Collapsed"/>
+                            <Path x:Name="SkipMark" Width="26" Height="26"
+                                  Data="M 9,17 L 17,9"
+                                  Stroke="{DynamicResource TextMuted}" StrokeThickness="2"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Visibility="Collapsed"/>
+                            <TextBlock x:Name="Number" Text="{Binding Text}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{Binding Color}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Ellipse x:Name="NoteDot" Width="7" Height="7"
+                                     Fill="{DynamicResource TextPrimary}"
+                                     Stroke="White" StrokeThickness="1"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top"
+                                     Margin="0,3,3,0" Visibility="Collapsed"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Empty" Property="Background"
+                                        Value="{DynamicResource CellHover}"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                <Setter TargetName="Filled" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="Number" Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ShowTick}" Value="True">
+                                <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                <Setter TargetName="SkipMark" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding HasNote}" Value="True">
+                                <Setter TargetName="NoteDot" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- A button with no visible frame, used for the clickable habit name -->
+        <Style x:Key="PlainButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- The white card behind each habit row -->
+        <Style x:Key="RowCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title and main buttons -->
+        <Grid Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="My habits" FontSize="26" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimary}"/>
+                <TextBlock x:Name="TodayText" FontSize="13" Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextMuted}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+                <Button Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                        ToolTip="Theme, backup and export" Click="Settings_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   VerticalAlignment="Center" Margin="0,1,8,0"/>
+                        <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Content="+  New habit" Style="{StaticResource PrimaryButton}"
+                        Click="NewHabit_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Sorting and filters -->
+        <StackPanel x:Name="Toolbar" Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,14">
+            <TextBlock Text="Sort by" VerticalAlignment="Center" Margin="0,0,8,0"
+                       Foreground="{DynamicResource TextSecondary}"/>
+            <ComboBox x:Name="SortBox" Width="180" Padding="8,4"
+                      SelectionChanged="View_Changed">
+                <ComboBoxItem Content="My order"/>
+                <ComboBoxItem Content="Name"/>
+                <ComboBoxItem Content="Color"/>
+                <ComboBoxItem Content="Strength"/>
+                <ComboBoxItem Content="Not done today first"/>
+            </ComboBox>
+            <CheckBox x:Name="HideDoneBox" Content="Hide habits done today"
+                      Margin="20,0,0,0" VerticalAlignment="Center"
+                      Foreground="{DynamicResource TextPrimary}"
+                      Checked="View_Changed" Unchecked="View_Changed"/>
+            <CheckBox x:Name="ShowArchivedBox" Content="Show archived"
+                      Margin="16,0,0,0" VerticalAlignment="Center"
+                      Foreground="{DynamicResource TextPrimary}"
+                      Checked="View_Changed" Unchecked="View_Changed"/>
+        </StackPanel>
+
+        <!-- Shown when there is nothing to list -->
+        <StackPanel x:Name="EmptyState" Grid.Row="2" Visibility="Collapsed"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock x:Name="EmptyTitle" FontSize="20" FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <TextBlock x:Name="EmptyText" Margin="0,6,0,0" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource TextMuted}"/>
+            <Button x:Name="EmptyButton" Content="+  New habit"
+                    Style="{StaticResource PrimaryButton}"
+                    HorizontalAlignment="Center" Margin="0,18,0,0"
+                    Click="NewHabit_Click"/>
+        </StackPanel>
+
+        <ScrollViewer x:Name="HabitScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Row of dates above the grid -->
+                <Border Padding="15,0" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="64"/>
+                        </Grid.ColumnDefinitions>
+                        <ItemsControl x:Name="DayHeaderList" Grid.Column="1">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border x:Name="Pill" Width="32" Margin="2,0"
+                                            CornerRadius="8" Padding="0,4">
+                                        <StackPanel>
+                                            <TextBlock x:Name="NameText" Text="{Binding DayName}"
+                                                       FontSize="11" HorizontalAlignment="Center"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock x:Name="NumberText" Text="{Binding DayNumber}"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                            <Setter TargetName="Pill" Property="Background"
+                                                    Value="{DynamicResource Accent}"/>
+                                            <Setter TargetName="NameText" Property="Foreground" Value="#DDEDE8"/>
+                                            <Setter TargetName="NumberText" Property="Foreground" Value="White"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <!-- One row per habit -->
+                <ItemsControl x:Name="HabitList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource RowCard}" Opacity="{Binding RowOpacity}">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Open details" Click="OpenDetails_Click"/>
+                                        <MenuItem Header="Edit" Click="EditHabit_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="Move up" Click="MoveUp_Click"/>
+                                        <MenuItem Header="Move down" Click="MoveDown_Click"/>
+                                        <MenuItem Header="{Binding ArchiveLabel}" Click="Archive_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="Delete" Click="DeleteHabit_Click"/>
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="64"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Ellipse Width="12" Height="12" Fill="{Binding Color}"
+                                             VerticalAlignment="Center"/>
+
+                                    <Button Grid.Column="1" Margin="12,0"
+                                            Style="{StaticResource PlainButton}"
+                                            ToolTip="{Binding NameTooltip}"
+                                            Click="OpenDetails_Click">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Summary}" FontSize="11"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Strength, streak and a small progress bar -->
+                                    <StackPanel Grid.Column="2" Width="120" Margin="0,0,16,0"
+                                                VerticalAlignment="Center" Background="Transparent"
+                                                ToolTip="{Binding StatsTooltip}">
+                                        <Grid>
+                                            <TextBlock Text="{Binding StreakText}" FontSize="11"
+                                                       VerticalAlignment="Bottom"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Text="{Binding ScoreText}" FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="{Binding Color}"/>
+                                        </Grid>
+                                        <Grid Height="4" Margin="0,5,0,0">
+                                            <Border Background="{DynamicResource CellEmpty}"
+                                                    CornerRadius="2"/>
+                                            <Border Background="{Binding Color}" Width="120"
+                                                    HorizontalAlignment="Left">
+                                                <Border.RenderTransform>
+                                                    <ScaleTransform ScaleX="{Binding Score}"/>
+                                                </Border.RenderTransform>
+                                            </Border>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <ItemsControl Grid.Column="3" ItemsSource="{Binding Days}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource DayCellStyle}"
+                                                        ToolTip="{Binding Label}"
+                                                        Click="DayCell_Click">
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu>
+                                                            <MenuItem Header="{Binding SkipLabel}"
+                                                                      Click="SkipDay_Click"/>
+                                                            <MenuItem Header="{Binding NoteLabel}"
+                                                                      Click="NoteDay_Click"/>
+                                                            <Separator/>
+                                                            <MenuItem Header="Clear check-in"
+                                                                      Click="ClearDay_Click"/>
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                                HorizontalAlignment="Right">
+                                        <Button Content="✎" Style="{StaticResource IconButton}"
+                                                ToolTip="Edit habit"
+                                                Click="EditHabit_Click"/>
+                                        <Button Content="✕" Style="{StaticResource IconButton}"
+                                                ToolTip="Delete habit"
+                                                Click="DeleteHabit_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

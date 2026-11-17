@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- The exe is called Recur.exe. The code namespace stays HabitApp. -->
+    <AssemblyName>Recur</AssemblyName>
+    <RootNamespace>HabitApp</RootNamespace>
+    <ApplicationIcon>Recur.ico</ApplicationIcon>
+
+    <!-- Shown in the exe's Properties > Details in Windows. -->
+    <Product>Recur</Product>
+    <AssemblyTitle>Recur</AssemblyTitle>
+    <Description>A simple habit tracker for Windows.</Description>
+    <Company>Pranav Shinde</Company>
+    <Copyright>Copyright © 2026 Pranav Shinde</Copyright>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <!-- Settings used by "dotnet publish" for the release build:
+       one self-contained Recur.exe that runs without .NET installed. -->
+  <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="11.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+</Project>
