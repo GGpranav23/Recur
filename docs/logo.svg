@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>Recur</title>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="#F3EEE5"/>
+  <!-- Arc arrow: looping back to the start -->
+  <path d="M92 54 C 86 30, 50 26, 38 46" fill="none" stroke="#2F7D6B" stroke-width="8" stroke-linecap="round"/>
+  <path d="M26 40 L 37 56 L 47 39 Z" fill="#2F7D6B" stroke="#2F7D6B" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Three days -->
+  <rect x="21" y="62" width="24" height="24" rx="5" fill="#2F7D6B"/>
+  <rect x="52" y="62" width="24" height="24" rx="5" fill="#2F7D6B"/>
+  <rect x="83" y="62" width="24" height="24" rx="5" fill="#2F7D6B"/>
+  <path d="M89 74.5 L 93.5 79 L 101.5 69.5" fill="none" stroke="#F3EEE5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
